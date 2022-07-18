@@ -8,13 +8,7 @@ class Wallet:
         self.coins = {}
         new_coin = input('\nAdd which coin to your portfolio? ').upper()
         while new_coin != '':
-            try:
-                my_vars = vars()
-                my_vars[new_coin] = Coin(new_coin)
-                amount = float(input(f'How many tokens of {my_vars[new_coin]} do you have? '))
-                self.coins[str(my_vars[new_coin])] = [my_vars[new_coin], amount]
-            except KeyError:
-                print('Something went wrong, coin was not added to wallet... ')
+            self.add_asset(new_coin)
             new_coin = input('\nAdd a coin or press [Enter] to continue: ').upper()
         print('\n')
         self.value = self.get_value()
@@ -31,6 +25,7 @@ class Wallet:
         for coin in self.coins.values():
             value += coin[1] * coin[0].price
         return value
+
 
     def get_ts(self):
         values = list(self.coins.values())
@@ -101,12 +96,60 @@ class Wallet:
         plt.show()
 
 
+    def add_asset(self, asset = None, amount = None):
+        if asset is None:
+            asset = input('Add which asset to your wallet? ').upper()
+        if amount is None:
+            amount = float(input(f'Add how many tokens of {asset}? '))
+        assets = list(self.coins.keys())
+        added = True
+        asset = asset.upper()
+        amount = float(amount)
+        if asset in assets:
+            self.coins[asset][1] += amount
+        else:
+            my_vars = vars()
+            try:
+                new_asset = 'X' + asset + 'ZUSD'
+                my_vars[new_asset] = Coin(new_asset)
+                self.coins[str(my_vars[new_asset])] = [my_vars[new_asset], amount]
+            except KeyError:
+                try:
+                    new_asset = asset + 'USD'
+                    my_vars[new_asset] = Coin(new_asset)
+                    self.coins[str(my_vars[new_asset])] = [my_vars[new_asset], amount]
+                except KeyError:
+                    try:
+                        new_asset = asset
+                        my_vars[new_asset] = Coin(new_asset)
+                        if my_vars[new_asset].asset not in assets:
+                            self.coins[str(my_vars[new_asset])] = [my_vars[new_asset], amount]
+                        else:
+                            self.coins[my_vars[new_asset].asset][1] += amount
+                    except KeyError:
+                        print('Could not find an asset by that name... \n')
+                        added = False
+        if added:
+            try:
+                print(f'\nAdded {amount} of {my_vars[new_asset].asset} to your wallet.')
+            except UnboundLocalError:
+                print(f'\nAdded {amount} of {self.coins[asset][0].asset} to your wallet.')
+            self.value = self.get_value()
+
+
+
+    def remove_asset(self, asset = None, amount = None):
+            pass
+
+
+    def save(self, name):
+        pass
+
+
+    def load(self, name):
+        pass
+
+
 if __name__ == '__main__':
     my_wallet = Wallet()
-    # print(my_wallet.coins["XBT"])
-    # print(my_wallet.coins["XBT"][0].price)
-    # print(my_wallet)
-    # print(my_wallet.value)
-    # my_wallet.plot_ts()
-    # my_wallet.plot_asset("XBT")
-    my_wallet.plot_dist_asset()
+    print(my_wallet)
