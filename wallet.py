@@ -1,18 +1,18 @@
 from coin import Coin
 import matplotlib.pyplot as plt
 import numpy as np
+from os import path
 
 class Wallet:
 
-    def __init__(self):
+    def __init__(self, load = False):
         self.coins = {}
-        new_coin = input('\nAdd which coin to your portfolio? ').upper()
-        while new_coin != '':
-            self.add_asset(new_coin)
-            new_coin = input('\nAdd a coin or press [Enter] to continue: ').upper()
-        print('\n')
-        self.value = self.get_value()
-        self.ts = self.get_ts()
+        if not self.load:
+            new_coin = input('\nAdd which coin to your portfolio? ').upper()
+            while new_coin != '':
+                self.add_asset(new_coin)
+                new_coin = input('\nAdd a coin or press [Enter] to continue: ').upper()
+            print('\n')
         
 
     def __repr__(self):
@@ -49,12 +49,25 @@ class Wallet:
         if asset is None:
             asset = input('Plot time series for which asset? ')
         asset = asset.upper()
-        while asset not in assets:
-            asset = input(f"That asset isn't in your wallet.\nPlease choose from {assets}: ").upper()
-        plt.plot([t[0] for t in self.coins[asset][0].ts], [p[1] for p in self.coins[asset][0].ts])
-        plt.title(f"Time Series for {asset}")
-        plt.xlabel("Date")
-        plt.ylabel("Price")
+        if asset == 'ALL':
+            fig = plt.figure("Asset Time Series")
+            length = len(assets)
+            ncol = int(np.ceil(np.sqrt(length)))
+            nrow = int(np.ceil(length / ncol))
+            for i, coin in enumerate(list(self.coins.values())):
+                ax = fig.add_subplot(nrow, ncol, i + 1)
+                ax.plot([t[0] for t in coin[0].ts], [p[1] for p in coin[0].ts])
+                ax.set_title(f'Distribution for {coin[0].asset}')
+                ax.set_xlabel(f"Date")
+                ax.set_ylabel("Price")
+            fig.tight_layout()
+        else:
+            while asset not in assets:
+                asset = input(f"That asset isn't in your wallet.\nPlease choose from {assets}: ").upper()
+            plt.plot([t[0] for t in self.coins[asset][0].ts], [p[1] for p in self.coins[asset][0].ts])
+            plt.title(f"Time Series for {asset}")
+            plt.xlabel("Date")
+            plt.ylabel("Price")
         plt.show()
 
     
@@ -70,6 +83,9 @@ class Wallet:
 
     def plot_dist_asset(self, asset = None):
         if asset is None:
+            asset = input('Plot distribution for which asset? ')
+        asset = asset.upper()
+        if asset == 'ALL':
             fig = plt.figure("Asset Return Distribution")
             length = len(list(self.coins.keys()))
             ncol = int(np.ceil(np.sqrt(length)))
@@ -93,6 +109,7 @@ class Wallet:
             plt.hist(returns, bins = 32)
             plt.title(f'{asset} Return Distribution')
             plt.xlabel(f'Log Return with mean {np.mean(returns):.4%} and sd {np.std(returns):.4%}')
+            plt.ylabel('Frequency')
         plt.show()
 
 
@@ -135,6 +152,7 @@ class Wallet:
             except UnboundLocalError:
                 print(f'\nAdded {amount} of {self.coins[asset][0].asset} to your wallet.')
             self.value = self.get_value()
+            self.ts = self.get_ts()
 
 
 
@@ -143,13 +161,36 @@ class Wallet:
 
 
     def save(self, name):
-        pass
+        path_to = path.realpath(path.join(path.dirname(__file__), 'saves', f'{name}.csv'))
+        values = list(self.coins.values())
+        with open(path_to, 'w') as file:
+            for i, coin in enumerate(values):
+                if i < len(values):
+                    file.write(f'{coin[0]}${coin[1]},')
+                else:
+                    file.write(f'{coin[0]}${coin[1]}')
+        print(f'Saved {name} to saves...\n')
 
 
     def load(self, name):
+        path_from = path.realpath(path.join(path.dirname(__file__), 'saves', f'{name}.csv'))
+        with open(path_from, 'r') as file:
+            loaded = file.read()
+            for coins in loaded.split(','):
+                coin = coins.split('$')
+                self.add_asset(coin[0], coin[1])
+        print(f'Loaded {name} from saves...\n')
+
+
+    def cov_matrix(self):
         pass
 
-
 if __name__ == '__main__':
-    my_wallet = Wallet()
+    my_wallet = Wallet(load = True)
+    my_wallet.load('test')
     print(my_wallet)
+    # my_wallet.plot_dist()
+    my_wallet.plot_dist_asset('eth')
+    # my_wallet.plot_ts()
+    my_wallet.plot_ts_asset('eth')
+    

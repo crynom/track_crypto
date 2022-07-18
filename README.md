@@ -5,7 +5,7 @@ The only way this could be better than using an app like Coinbase is if you don'
 
 ## To-do list
 
-* Add save/load
+* Add covariance matrix for assets
 * Add diffing between save/load
 * I'll think of more as I go
 * Make a run script
