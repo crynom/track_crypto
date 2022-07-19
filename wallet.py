@@ -7,7 +7,7 @@ class Wallet:
 
     def __init__(self, load = False):
         self.coins = {}
-        if not self.load:
+        if not load:
             new_coin = input('\nAdd which coin to your portfolio? ').upper()
             while new_coin != '':
                 self.add_asset(new_coin)
@@ -82,6 +82,7 @@ class Wallet:
 
 
     def plot_dist_asset(self, asset = None):
+        assets = list(self.coins.keys())
         if asset is None:
             asset = input('Plot distribution for which asset? ')
         asset = asset.upper()
@@ -100,8 +101,6 @@ class Wallet:
                 ax.set_ylabel("Frequency")
             fig.tight_layout()
         else:
-            assets = list(self.coins.keys())
-            asset = asset.upper()
             while asset not in assets:
                 asset = input(f"That asset isn't in your wallet.\nPlease choose from {assets}: ").upper()
             ts_price = [p[1] for p in self.coins[asset][0].ts]
@@ -113,11 +112,23 @@ class Wallet:
         plt.show()
 
 
-    def add_asset(self, asset = None, amount = None):
+    def valid_number(self, amount):
+        try:
+            amount = float(amount)
+        except ValueError:
+            return False
+        if amount <= 0:
+            return False
+        return True
+
+
+    def add_asset(self, asset = None, amount = ''):
         if asset is None:
             asset = input('Add which asset to your wallet? ').upper()
-        if amount is None:
-            amount = float(input(f'Add how many tokens of {asset}? '))
+        if amount == '':
+            while not self.valid_number(amount):
+                amount = input(f'Add how many tokens of {asset}? ')
+            amount = float(amount)
         assets = list(self.coins.keys())
         added = True
         asset = asset.upper()
@@ -186,11 +197,11 @@ class Wallet:
         pass
 
 if __name__ == '__main__':
-    my_wallet = Wallet(load = True)
-    my_wallet.load('test')
+    my_wallet = Wallet()
+    # my_wallet.load('test')
     print(my_wallet)
     # my_wallet.plot_dist()
-    my_wallet.plot_dist_asset('eth')
+    # my_wallet.plot_dist_asset('eth')
     # my_wallet.plot_ts()
-    my_wallet.plot_ts_asset('eth')
+    # my_wallet.plot_ts_asset('eth')
     
