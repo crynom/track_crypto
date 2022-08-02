@@ -40,6 +40,7 @@ class Wallet:
         plt.plot([t[0] for t in self.ts], [p[1] for p in self.ts])
         plt.title("Time Series for Your Wallet")
         plt.xlabel("Date")
+        plt.xticks(rotation = 45)
         plt.ylabel("Price")
         plt.show()
 
@@ -60,6 +61,7 @@ class Wallet:
                 ax.set_title(f'Distribution for {coin[0].asset}')
                 ax.set_xlabel(f"Date")
                 ax.set_ylabel("Price")
+                ax.tick_params(axis='x', labelrotation = 45)
             fig.tight_layout()
         else:
             while asset not in assets:
@@ -93,7 +95,7 @@ class Wallet:
             nrow = int(np.ceil(length / ncol))
             for i, coin in enumerate(list(self.coins.values())):
                 ts_price = [p[1] for p in coin[0].ts]
-                returns = [np.log(ts_price[i]/ts_price[i-1]) for i in range(1, len(ts_price))]
+                returns = [np.log(ts_price[n]/ts_price[n-1]) for n in range(1, len(ts_price))]
                 ax = fig.add_subplot(nrow, ncol, i + 1)
                 ax.hist(returns, bins = 32)
                 ax.set_title(f'Distribution for {coin[0].asset}')
@@ -115,11 +117,12 @@ class Wallet:
     def valid_number(self, amount):
         try:
             amount = float(amount)
+            if amount <= 0:
+                return False
+            return True
         except ValueError:
             return False
-        if amount <= 0:
-            return False
-        return True
+        
 
 
     def add_asset(self, asset = None, amount = ''):
@@ -194,14 +197,77 @@ class Wallet:
 
 
     def cov_matrix(self):
+        returns = []
+        for coin in list(self.coins.values()):
+            prices = [p[1] for p in coin[0].ts]
+            log_ret = [np.log(prices[i]/prices[i-1]) for i in range(1, len(prices))]
+            returns.append(log_ret)
+        covmtx = np.cov(returns)
+        assets = list(self.coins.keys())
+        print(f'\n        {"         ".join(assets)}')
+        for i, j in zip(assets, covmtx):
+            print(i, j)
+        self.covmtx = covmtx
+
+    
+    def corr_matrix(self):
+        returns = []
+        for coin in list(self.coins.values()):
+            prices = [p[1] for p in coin[0].ts]
+            log_ret = [np.log(prices[i]/prices[i-1]) for i in range(1, len(prices))]
+            returns.append(log_ret)
+        corrmtx = np.corrcoef(returns)
+        assets = list(self.coins.keys())
+        print(f'\n        {"         ".join(assets)}')
+        for i, j in zip(assets, corrmtx):
+            print(i, j)
+        self.corrmtx = corrmtx
+
+
+    def plot_relative_price(self):
+        assets = list(self.coins.keys())
+        asset = input('\nPlot which asset? ').upper()
+        while asset not in assets:
+            asset = input('\nThat asset is not in your wallet. Plot which asset? ').upper()
+        against = input('\nPlot against which asset? ').upper()
+        while against not in assets:
+            against = input('\nThat asset is not in your wallet. Plot against which asset? ').upper()
+        fig = plt.figure('Relative Price Plot', figsize=(12,8))
+        ax1 = fig.add_subplot(1,3,1)
+        ax1.plot([t[0] for t in self.coins[asset][0].ts], [p[1] for p in self.coins[asset][0].ts], color = 'red')
+        ax1.set_title(f'Time Series for {asset}')
+        ax1.set_xlabel('Date')
+        ax1.tick_params(axis='x', labelrotation = 45)
+        ax1.set_ylabel('Price')
+        ax2 = fig.add_subplot(1,3,2)
+        ax2.plot([t[0] for t in self.coins[asset][0].ts], [p[1]/a[1] for p, a in zip(self.coins[asset][0].ts, self.coins[against][0].ts)])
+        ax2.set_title(f'Time Series for {asset}/{against}')
+        ax2.set_xlabel('Date')
+        ax2.tick_params(axis='x', labelrotation = 45)
+        ax2.set_ylabel('Price')
+        ax3 = fig.add_subplot(1,3,3)
+        ax3.plot([t[0] for t in self.coins[against][0].ts], [p[1] for p in self.coins[against][0].ts], color = 'green')
+        ax3.set_title(f'Time Series for {against}')
+        ax3.set_xlabel('Date')
+        ax3.tick_params(axis='x', labelrotation = 45)
+        ax3.set_ylabel('Price')
+        fig.tight_layout()
+        plt.show()
+
+
+    def pos_neg_dist(self):
         pass
 
+
 if __name__ == '__main__':
-    my_wallet = Wallet()
-    # my_wallet.load('test')
+    my_wallet = Wallet(load=True)
+    my_wallet.load('test')
     print(my_wallet)
+    my_wallet.cov_matrix()
+    my_wallet.corr_matrix()
+    my_wallet.plot_relative_price()
     # my_wallet.plot_dist()
-    # my_wallet.plot_dist_asset('eth')
+    # my_wallet.plot_dist_asset()
     # my_wallet.plot_ts()
-    # my_wallet.plot_ts_asset('eth')
+    # my_wallet.plot_ts_asset()
     
