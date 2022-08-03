@@ -5,8 +5,9 @@ from os import path
 
 class Wallet:
 
-    def __init__(self, load = False):
+    def __init__(self, load = False, interval = 1440):
         self.coins = {}
+        self.interval = interval
         if not load:
             new_coin = input('\nAdd which coin to your portfolio? ').upper()
             while new_coin != '':
@@ -142,17 +143,17 @@ class Wallet:
             my_vars = vars()
             try:
                 new_asset = 'X' + asset + 'ZUSD'
-                my_vars[new_asset] = Coin(new_asset)
+                my_vars[new_asset] = Coin(new_asset, interval= self.interval)
                 self.coins[str(my_vars[new_asset])] = [my_vars[new_asset], amount]
             except KeyError:
                 try:
                     new_asset = asset + 'USD'
-                    my_vars[new_asset] = Coin(new_asset)
+                    my_vars[new_asset] = Coin(new_asset, interval= self.interval)
                     self.coins[str(my_vars[new_asset])] = [my_vars[new_asset], amount]
                 except KeyError:
                     try:
                         new_asset = asset
-                        my_vars[new_asset] = Coin(new_asset)
+                        my_vars[new_asset] = Coin(new_asset, interval= self.interval)
                         if my_vars[new_asset].asset not in assets:
                             self.coins[str(my_vars[new_asset])] = [my_vars[new_asset], amount]
                         else:
@@ -260,9 +261,9 @@ class Wallet:
 
 
 if __name__ == '__main__':
-    my_wallet = Wallet(load=True)
-    my_wallet.load('test')
-    print(my_wallet)
+    my_wallet = Wallet(interval = 240)
+    my_wallet.load('michael')
+    # print(my_wallet)
     my_wallet.cov_matrix()
     my_wallet.corr_matrix()
     my_wallet.plot_relative_price()

@@ -2,7 +2,8 @@ import requests
 from datetime import datetime as dt
 class Coin:
     
-    def __init__(self, ticker):
+    def __init__(self, ticker, interval = 1440):
+        self.interval = interval
         self.ticker = ticker.upper()
         self.price = self.get_price()
         self.asset = self.ticker[1:-4] if self.ticker[-4:] == 'ZUSD' else self.ticker[:-3]
@@ -16,7 +17,7 @@ class Coin:
         return float(resp['result'][self.ticker]['c'][0])
 
     def get_ts(self):
-        resp = requests.get(f'https://api.kraken.com/0/public/OHLC?pair={self.ticker}&interval=1440').json()
+        resp = requests.get(f'https://api.kraken.com/0/public/OHLC?pair={self.ticker}&interval={self.interval}').json()
         ts = [(dt.fromtimestamp(int(t[0])), float(t[4])) for t in resp['result'][self.ticker]]
         return ts
 
