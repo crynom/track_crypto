@@ -171,8 +171,24 @@ class Wallet:
 
 
 
-    def remove_asset(self, asset = None, amount = None):
-            pass
+    def remove_asset(self, asset = None, amount = ''):
+            if asset is None:
+                asset = input("\nRemove which asset? ")
+            asset = asset.upper()
+            while asset not in list(self.coins.keys()):
+                asset = input("\nThat asset is not in your wallet. Remove which asset? ").upper()
+            if amount == '':
+                while not self.valid_number(amount):
+                    amount = input(f"\nRemove how many tokens of {asset}? ")
+                amount = float(amount)
+            if amount >= self.coins[asset][1]:
+                del self.coins[asset]
+                print(f"\nDeleted {asset} from your wallet... ")
+            else:
+                self.coins[asset][1] -= amount
+                print(f"\nRemoved {amount} of {asset}... ")
+            self.value = self.get_value
+            self.ts = self.get_ts()
 
 
     def save(self, name):
@@ -261,12 +277,14 @@ class Wallet:
 
 
 if __name__ == '__main__':
-    my_wallet = Wallet(interval = 240)
-    my_wallet.load('michael')
+    my_wallet = Wallet()
+    my_wallet.load('test')
+    my_wallet.add_asset(asset='xrp', amount=10)
     # print(my_wallet)
     my_wallet.cov_matrix()
+    my_wallet.remove_asset(asset='xrp', amount=10)
     my_wallet.corr_matrix()
-    my_wallet.plot_relative_price()
+    # my_wallet.plot_relative_price()
     # my_wallet.plot_dist()
     # my_wallet.plot_dist_asset()
     # my_wallet.plot_ts()
